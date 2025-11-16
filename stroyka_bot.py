@@ -18,9 +18,12 @@ async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(f'Hello {update.effective_user.first_name}')
 
 def resolve_token() -> str:
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    if token:
-        return token
+    # Поддерживаем несколько возможных имён переменной для удобства деплоя
+    possible_keys = ["TELEGRAM_BOT_TOKEN", "BOT_TOKEN", "TOKEN_TG", "TOKEN"]
+    for key in possible_keys:
+        val = os.getenv(key)
+        if val:
+            return val
     # Фолбэк: попробуем прочитать токен напрямую из .env рядом со скриптом
     try:
         direct_env = (Path(__file__).parent / ".env")
@@ -30,7 +33,11 @@ def resolve_token() -> str:
                     return line.split("=", 1)[1].strip().strip('"').strip("'")
     except Exception:
         pass
-    raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set")
+    raise ValueError(
+        "TELEGRAM_BOT_TOKEN environment variable is not set. "
+        "Установите переменную окружения с ключом TELEGRAM_BOT_TOKEN (или BOT_TOKEN/TOKEN_TG/TOKEN) "
+        "в среде запуска (например, Railway → Variables)."
+    )
 
 def main() -> None:
     load_env()
